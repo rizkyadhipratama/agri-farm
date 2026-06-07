@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-export async function GET(req: Request) {
+export const dynamic = "force-dynamic";
+
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const token = searchParams.get("token");
+    const token = req.nextUrl.searchParams.get("token");
 
     if (!token) {
-      return NextResponse.redirect(new URL("/login?error=missing_token", req.url));
+      return NextResponse.redirect(new URL("/login?error=missing_token", req.nextUrl.origin));
     }
 
     const user = await prisma.user.findFirst({
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.redirect(new URL("/login?error=invalid_or_expired_token", req.url));
+      return NextResponse.redirect(new URL("/login?error=invalid_or_expired_token", req.nextUrl.origin));
     }
 
     await prisma.user.update({
@@ -30,9 +31,9 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.redirect(new URL("/login?verified=true", req.url));
+    return NextResponse.redirect(new URL("/login?verified=true", req.nextUrl.origin));
   } catch (error) {
     console.error("Verification error:", error);
-    return NextResponse.redirect(new URL("/login?error=verification_failed", req.url));
+    return NextResponse.redirect(new URL("/login?error=verification_failed", req.nextUrl.origin));
   }
 }
