@@ -33,6 +33,9 @@ export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -57,19 +60,58 @@ export default function LocationsPage() {
       .catch(() => setLoading(false));
   };
 
+  const handleAdd = () => {
+    setEditingLocation(null);
+    setFormData({ name: "", address: "", hectares: 0, description: "" });
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (location: Location) => {
+    setEditingLocation(location);
+    setFormData({
+      name: location.name,
+      address: location.address,
+      hectares: location.hectares,
+      description: location.description || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/locations/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDeleteError(data.error || "Gagal menghapus data.");
+        return;
+      }
+      setDeleteConfirmId(null);
+      setDeleteError("");
+      fetchLocations();
+    } catch (error) {
+      console.error(error);
+      setDeleteError("Gagal menghapus data. Silakan coba lagi.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     
     try {
-      const res = await fetch("/api/locations", {
-        method: "POST",
+      const url = editingLocation ? `/api/locations/${editingLocation.id}` : "/api/locations";
+      const method = editingLocation ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       
       if (res.ok) {
         setDialogOpen(false);
+        setEditingLocation(null);
         setFormData({ name: "", address: "", hectares: 0, description: "" });
         fetchLocations();
       }
@@ -108,9 +150,9 @@ export default function LocationsPage() {
             </div>
           </div>
           {isOperator && (
-            <Button onClick={() => setDialogOpen(true)} className="bg-teal-600 hover:bg-teal-700">
+            <Button onClick={handleAdd} className="bg-teal-600 hover:bg-teal-700">
               <Plus className="w-4 h-4 mr-2" />
-              Add Location
+              Tambah Lokasi
             </Button>
           )}
         </div>
@@ -176,10 +218,10 @@ export default function LocationsPage() {
                         </div>
                         {isOperator && (
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-100">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-100" onClick={() => handleEdit(location)}>
                               <Pencil className="w-4 h-4 text-blue-600" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-100">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-100" onClick={() => setDeleteConfirmId(location.id)}>
                               <Trash2 className="w-4 h-4 text-red-600" />
                             </Button>
                           </div>
@@ -211,15 +253,15 @@ export default function LocationsPage() {
       <FormModal
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title="Add New Location"
+        title={editingLocation ? "Edit Data Lokasi" : "Tambah Data Lokasi"}
         onSubmit={handleSubmit}
-        submitLabel={submitting ? "Saving..." : "Save Location"}
+        submitLabel={submitting ? "Menyimpan..." : editingLocation ? "Perbarui Data" : "Simpan Data"}
       >
         <div>
-          <Label htmlFor="name">Location Name</Label>
+          <Label htmlFor="name">Nama Lokasi</Label>
           <Input
             id="name"
-            placeholder="Enter location name"
+            placeholder="Masukkan nama lokasi"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
@@ -227,10 +269,10 @@ export default function LocationsPage() {
           />
         </div>
         <div>
-          <Label htmlFor="address">Address</Label>
+          <Label htmlFor="address">Alamat</Label>
           <Input
             id="address"
-            placeholder="Enter address"
+            placeholder="Masukkan alamat"
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             required
@@ -238,7 +280,7 @@ export default function LocationsPage() {
           />
         </div>
         <div>
-          <Label htmlFor="hectares">Area (Hectares)</Label>
+          <Label htmlFor="hectares">Luas (Hektar)</Label>
           <Input
             id="hectares"
             type="number"
@@ -250,15 +292,45 @@ export default function LocationsPage() {
           />
         </div>
         <div>
-          <Label htmlFor="description">Description (Optional)</Label>
+          <Label htmlFor="description">Deskripsi (Opsional)</Label>
           <Input
             id="description"
-            placeholder="Add description..."
+            placeholder="Tambah deskripsi..."
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             style={{ marginTop: '4px' }}
           />
         </div>
+      </FormModal>
+
+      <FormModal
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmId(null);
+            setDeleteError("");
+          }
+        }}
+        title="Hapus Data Lokasi"
+        onSubmit={(e) => { e.preventDefault(); handleDelete(deleteConfirmId!); }}
+        submitLabel="Ya, Hapus"
+      >
+        <p className="text-gray-600">
+          Apakah Anda yakin ingin menghapus lokasi ini? Tindakan ini tidak dapat dibatalkan.
+        </p>
+        {deleteError && (
+          <div style={{
+            marginTop: '8px',
+            padding: '12px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '6px',
+            color: '#dc2626',
+            fontSize: '14px',
+          }}>
+            ⚠️ {deleteError}
+          </div>
+        )}
       </FormModal>
     </div>
   );

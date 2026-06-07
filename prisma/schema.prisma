@@ -103,6 +103,7 @@ model FarmLocation {
   id          String   @id @default(uuid())
   name        String
   address     String
+  hectares    Float    @default(0)
   latitude    Decimal? @db.Decimal(10, 8)
   longitude   Decimal? @db.Decimal(11, 8)
   description String?

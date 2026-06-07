@@ -48,7 +48,7 @@ export default function LandingPage() {
             <Link href="/login">
               <Button variant="ghost" style={{ color: '#4b5563' }}>Sign In</Button>
             </Link>
-            <Link href="/login">
+            <Link href="/register">
               <Button style={{ background: 'linear-gradient(135deg, #16a34a, #059669)', border: 'none', color: 'white', boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.3)' }}>Get Started</Button>
             </Link>
           </div>

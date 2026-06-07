@@ -14,7 +14,9 @@ import {
   LogOut,
   Menu,
   X,
-  Loader2
+  Loader2,
+  Shield,
+  ShieldCheck
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,12 +32,27 @@ const navigation = [
   { name: "Locations", href: "/dashboard/locations", icon: MapPin, color: "text-teal-600", bg: "bg-teal-100" },
 ];
 
+interface MonthlyData {
+  month: string;
+  revenue: number;
+  quantity: number;
+}
+
+interface LocationItem {
+  id: string;
+  name: string;
+  address: string;
+}
+
 interface Stats {
   products: number;
   inbounds: number;
   harvests: number;
   sales: number;
   totalRevenue: number;
+  monthlySales: MonthlyData[];
+  monthlyHarvests: MonthlyData[];
+  locations: LocationItem[];
 }
 
 export default function DashboardPage() {
@@ -43,7 +60,7 @@ export default function DashboardPage() {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [stats, setStats] = useState<Stats>({ products: 0, inbounds: 0, harvests: 0, sales: 0, totalRevenue: 0 });
+  const [stats, setStats] = useState<Stats>({ products: 0, inbounds: 0, harvests: 0, sales: 0, totalRevenue: 0, monthlySales: [], monthlyHarvests: [], locations: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -121,6 +138,22 @@ export default function DashboardPage() {
                 <p className="text-xs text-gray-500 capitalize">{session?.user?.role}</p>
               </div>
             </div>
+            {session?.user?.role === "guest" && (
+              <Button
+                variant="outline"
+                className="w-full justify-start text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200 mb-2"
+                onClick={() => {
+                  fetch("/api/auth/upgrade", { method: "POST" })
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.message) window.location.reload();
+                    });
+                }}
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Upgrade to Operator
+              </Button>
+            )}
             <Button
               variant="outline"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
@@ -227,11 +260,87 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white p-6 rounded-xl border-0 shadow-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Recent Activity</h2>
-              <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                <TrendingUp className="w-12 h-12 mb-2 opacity-50" />
-                <p>No recent activity</p>
-              </div>
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">Tren Penjualan Bulanan</h2>
+              {stats.monthlySales.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                  <TrendingUp className="w-12 h-12 mb-2 opacity-50" />
+                  <p>Belum ada data penjualan</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {stats.monthlySales.map((item) => {
+                    const maxRevenue = Math.max(...stats.monthlySales.map(s => s.revenue), 1);
+                    const pct = (item.revenue / maxRevenue) * 100;
+                    return (
+                      <div key={item.month} className="flex items-center gap-3">
+                        <span className="text-xs text-gray-500 w-16 flex-shrink-0">{item.month}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-green-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 w-20 text-right">${item.revenue.toLocaleString()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <div className="bg-white p-6 rounded-xl border-0 shadow-lg">
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">Tren Panen Bulanan</h2>
+              {stats.monthlyHarvests.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                  <TrendingUp className="w-12 h-12 mb-2 opacity-50" />
+                  <p>Belum ada data panen</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {stats.monthlyHarvests.map((item) => {
+                    const maxQty = Math.max(...stats.monthlyHarvests.map(h => h.quantity), 1);
+                    const pct = (item.quantity / maxQty) * 100;
+                    return (
+                      <div key={item.month} className="flex items-center gap-3">
+                        <span className="text-xs text-gray-500 w-16 flex-shrink-0">{item.month}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 w-20 text-right">{item.quantity.toLocaleString()} kg</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white p-6 rounded-xl border-0 shadow-lg">
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">Daftar Lokasi</h2>
+              {stats.locations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                  <MapPin className="w-12 h-12 mb-2 opacity-50" />
+                  <p>Belum ada lokasi</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {stats.locations.map((loc) => (
+                    <div key={loc.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-teal-50 transition-colors">
+                      <div className="p-2 bg-teal-100 rounded-lg">
+                        <MapPin className="w-4 h-4 text-teal-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{loc.name}</p>
+                        <p className="text-xs text-gray-500">{loc.address}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </main>

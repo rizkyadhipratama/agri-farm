@@ -19,6 +19,7 @@ export async function POST(request: Request) {
       data: {
         name: body.name,
         address: body.address,
+        hectares: body.hectares ? parseFloat(body.hectares) : 0,
         latitude: body.latitude,
         longitude: body.longitude,
         description: body.description,

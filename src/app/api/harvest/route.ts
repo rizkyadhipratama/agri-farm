@@ -22,6 +22,7 @@ export async function POST(request: Request) {
         quantity: body.quantity,
         unit: body.unit,
         quality: body.quality,
+        harvestDate: body.harvestDate ? new Date(body.harvestDate + "T00:00:00.000Z") : undefined,
         notes: body.notes,
       },
     });

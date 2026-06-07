@@ -33,6 +33,12 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const emailVerified = (user as any).emailVerified;
+        if (typeof emailVerified !== "undefined" && !emailVerified) {
+          console.log("Email not verified");
+          throw new Error("Please verify your email before signing in");
+        }
+
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.passwordHash

@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         productId: body.productId,
         quantity: body.quantity,
         unit: body.unit,
+        outboundDate: body.outboundDate ? new Date(body.outboundDate + "T00:00:00.000Z") : undefined,
         notes: body.notes,
       },
     });

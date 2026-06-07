@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sprout } from "lucide-react";
+import Link from "next/link";
+import { Sprout, CheckCircle } from "lucide-react";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [error, setError] = useState("");
+  const [verified, setVerified] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("verified") === "true") {
+      setVerified(true);
+    }
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,7 +40,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError(result.error);
     } else {
       window.location.href = "/dashboard";
     }
@@ -50,6 +60,12 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
+            {verified && (
+              <div className="p-3 text-sm text-green-700 bg-green-50 rounded-md flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Email verified! You can now sign in.
+              </div>
+            )}
             {error && (
               <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
                 {error}
@@ -78,6 +94,13 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
+
+            <p className="text-center text-sm text-gray-500">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-green-600 font-medium hover:underline">
+                Create one
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>

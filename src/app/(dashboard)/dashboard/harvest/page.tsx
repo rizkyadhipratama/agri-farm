@@ -7,19 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormModal } from "@/components/ui/modal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { 
   TrendingUp, 
   Plus, 
   Search,
   ArrowLeft,
-  Loader2
+  Loader2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -38,6 +33,20 @@ interface Harvest {
   harvestDate: string;
 }
 
+const selectStyle = {
+  marginTop: '4px',
+  width: '100%',
+  height: '40px',
+  borderRadius: '6px',
+  border: '1px solid #e2e8f0',
+  padding: '0 12px',
+  fontSize: '14px',
+  backgroundColor: 'white',
+  cursor: 'pointer',
+};
+
+const emptyForm = { productId: "", quantity: "" as number | "", unit: "", quality: "", harvestDate: "", notes: "" };
+
 export default function HarvestPage() {
   const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,16 +54,20 @@ export default function HarvestPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingHarvest, setEditingHarvest] = useState<Harvest | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    productId: "",
-    quantity: 0,
-    unit: "",
-    quality: "",
-    notes: "",
-  });
+  const [formData, setFormData] = useState(emptyForm);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   const isOperator = session?.user?.role === "operator" || session?.user?.role === "admin";
+
+  const fetchHarvests = () => {
+    fetch("/api/harvest")
+      .then(res => res.json())
+      .then(data => setHarvests(data))
+      .catch(console.error);
+  };
 
   useEffect(() => {
     Promise.all([
@@ -67,28 +80,68 @@ export default function HarvestPage() {
     }).catch(() => setLoading(false));
   }, []);
 
+  const handleAdd = () => {
+    setEditingHarvest(null);
+    setFormData(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (harvest: Harvest) => {
+    setEditingHarvest(harvest);
+    setFormData({
+      productId: harvest.productId,
+      quantity: parseFloat(harvest.quantity),
+      unit: harvest.unit,
+      quality: harvest.quality || "",
+      harvestDate: harvest.harvestDate.split("T")[0],
+      notes: "",
+    });
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     try {
-      const res = await fetch("/api/harvest", {
-        method: "POST",
+      const url = editingHarvest ? `/api/harvest/${editingHarvest.id}` : "/api/harvest";
+      const method = editingHarvest ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      
+
       if (res.ok) {
         setDialogOpen(false);
-        setFormData({ productId: "", quantity: 0, unit: "", quality: "", notes: "" });
-        const harvestsRes = await fetch("/api/harvest");
-        setHarvests(await harvestsRes.json());
+        setEditingHarvest(null);
+        setFormData(emptyForm);
+        fetchHarvests();
       }
     } catch (error) {
       console.error(error);
     }
-    
+
     setSubmitting(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/harvest/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDeleteError(data.error || "Gagal menghapus data.");
+        return;
+      }
+      setDeleteConfirmId(null);
+      setDeleteError("");
+      fetchHarvests();
+    } catch (error) {
+      console.error(error);
+      setDeleteError("Gagal menghapus data. Silakan coba lagi.");
+    }
   };
 
   const filteredHarvests = harvests.filter(h => 
@@ -110,15 +163,15 @@ export default function HarvestPage() {
                 <TrendingUp className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">Harvest Management</h1>
-                <p className="text-sm text-gray-500">Track and manage harvests</p>
+                <h1 className="text-xl font-bold text-gray-800">Hasil Panen</h1>
+                <p className="text-sm text-gray-500">Kelola data hasil panen</p>
               </div>
             </div>
           </div>
           {isOperator && (
-            <Button onClick={() => setDialogOpen(true)} className="bg-green-600 hover:bg-green-700">
+            <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-2" />
-              Record Harvest
+              Tambah Panen
             </Button>
           )}
         </div>
@@ -131,7 +184,7 @@ export default function HarvestPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search harvests..."
+                  placeholder="Cari hasil panen..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-gray-50 border-gray-200"
@@ -147,17 +200,18 @@ export default function HarvestPage() {
             ) : filteredHarvests.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                 <TrendingUp className="w-12 h-12 mb-4 text-gray-300" />
-                <p>No harvest records found</p>
+                <p>Tidak ada data panen</p>
               </div>
             ) : (
               <div className="rounded-md border border-gray-100">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quantity</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quality</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Date</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Produk</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Jumlah</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Kualitas</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Tanggal</th>
+                      {isOperator && <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Aksi</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -175,10 +229,22 @@ export default function HarvestPage() {
                             harvest.quality === 'Grade B' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-gray-100 text-gray-700'
                           }`}>
-                            {harvest.quality || "Not graded"}
+                            {harvest.quality || "Belum dinilai"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-600">{new Date(harvest.harvestDate).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-gray-600">{new Date(harvest.harvestDate).toLocaleDateString('id-ID')}</td>
+                        {isOperator && (
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button variant="ghost" size="icon" className="hover:bg-blue-100" onClick={() => handleEdit(harvest)}>
+                                <Pencil className="w-4 h-4 text-blue-600" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="hover:bg-red-100" onClick={() => setDeleteConfirmId(harvest.id)}>
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -192,84 +258,102 @@ export default function HarvestPage() {
       <FormModal
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title="Record Harvest"
+        title={editingHarvest ? "Edit Hasil Panen" : "Tambah Hasil Panen"}
         onSubmit={handleSubmit}
-        submitLabel={submitting ? "Saving..." : "Save Harvest"}
+        submitLabel={submitting ? "Menyimpan..." : editingHarvest ? "Perbarui" : "Simpan"}
       >
         <div>
-          <Label htmlFor="product">Product</Label>
-          <Select
+          <Label htmlFor="product">Produk</Label>
+          <select
             value={formData.productId}
-            onValueChange={(value) => setFormData({ ...formData, productId: value })}
+            onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
             required
+            style={selectStyle}
           >
-            <SelectTrigger style={{ marginTop: '4px' }}>
-              <SelectValue placeholder="Select product" />
-            </SelectTrigger>
-            <SelectContent>
-              {products.map(product => (
-                <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">Pilih Produk</option>
+            {products.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <Label htmlFor="quantity">Quantity</Label>
+            <Label htmlFor="quantity">Jumlah</Label>
             <Input
               id="quantity"
               type="number"
               min="1"
               value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, quantity: e.target.value === "" ? "" : parseFloat(e.target.value) })}
               required
               style={{ marginTop: '4px' }}
             />
           </div>
           <div>
-            <Label htmlFor="unit">Unit</Label>
-            <Select
+            <Label htmlFor="unit">Satuan</Label>
+            <select
               value={formData.unit}
-              onValueChange={(value) => setFormData({ ...formData, unit: value })}
+              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
               required
+              style={selectStyle}
             >
-              <SelectTrigger style={{ marginTop: '4px' }}>
-                <SelectValue placeholder="Unit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kg">Kilogram</SelectItem>
-                <SelectItem value="ton">Ton</SelectItem>
-                <SelectItem value="pcs">Pieces</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="">Pilih Satuan</option>
+              <option value="kg">Kilogram</option>
+              <option value="ton">Ton</option>
+              <option value="pcs">Buah</option>
+              <option value="liter">Liter</option>
+            </select>
           </div>
         </div>
         <div>
-          <Label htmlFor="quality">Quality</Label>
-          <Select
+          <Label htmlFor="quality">Kualitas</Label>
+          <select
             value={formData.quality}
-            onValueChange={(value) => setFormData({ ...formData, quality: value })}
+            onChange={(e) => setFormData({ ...formData, quality: e.target.value })}
+            style={selectStyle}
           >
-            <SelectTrigger style={{ marginTop: '4px' }}>
-              <SelectValue placeholder="Select quality" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Grade A">Grade A</SelectItem>
-              <SelectItem value="Grade B">Grade B</SelectItem>
-              <SelectItem value="Grade C">Grade C</SelectItem>
-            </SelectContent>
-          </Select>
+            <option value="">Pilih Kualitas</option>
+            <option value="Grade A">Grade A</option>
+            <option value="Grade B">Grade B</option>
+            <option value="Grade C">Grade C</option>
+          </select>
         </div>
         <div>
-          <Label htmlFor="notes">Notes (Optional)</Label>
+          <Label htmlFor="harvestDate">Tanggal Panen</Label>
+          <Input
+            id="harvestDate"
+            type="date"
+            value={formData.harvestDate}
+            onChange={(e) => setFormData({ ...formData, harvestDate: e.target.value })}
+            required
+            style={{ marginTop: '4px' }}
+          />
+        </div>
+        <div>
+          <Label htmlFor="notes">Catatan (Opsional)</Label>
           <Input
             id="notes"
-            placeholder="Add notes..."
+            placeholder="Tambahkan catatan..."
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             style={{ marginTop: '4px' }}
           />
         </div>
+      </FormModal>
+
+      <FormModal
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => { if (!open) { setDeleteConfirmId(null); setDeleteError(""); } }}
+        title="Hapus Data Panen"
+        onSubmit={(e) => { e.preventDefault(); handleDelete(deleteConfirmId!); }}
+        submitLabel="Ya, Hapus"
+      >
+        <p className="text-gray-600">Apakah Anda yakin ingin menghapus data panen ini?</p>
+        {deleteError && (
+          <div style={{ marginTop: '8px', padding: '12px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#dc2626', fontSize: '14px' }}>
+            {deleteError}
+          </div>
+        )}
       </FormModal>
     </div>
   );

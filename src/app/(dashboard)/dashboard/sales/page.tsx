@@ -7,13 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormModal } from "@/components/ui/modal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { 
   DollarSign, 
   Plus, 
@@ -21,7 +14,9 @@ import {
   ArrowLeft,
   Loader2,
   TrendingUp,
-  Receipt
+  Receipt,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -42,6 +37,28 @@ interface Sale {
   salesDate: string;
 }
 
+const selectStyle = {
+  marginTop: '4px',
+  width: '100%',
+  height: '40px',
+  borderRadius: '6px',
+  border: '1px solid #e2e8f0',
+  padding: '0 12px',
+  fontSize: '14px',
+  backgroundColor: 'white',
+  cursor: 'pointer',
+};
+
+const emptyForm = {
+  id: "",
+  harvestId: "",
+  quantity: "" as number | "",
+  unitPrice: "" as number | "",
+  buyerName: "",
+  salesDate: "",
+  notes: "",
+};
+
 export default function SalesPage() {
   const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,18 +66,19 @@ export default function SalesPage() {
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    harvestId: "",
-    quantity: 0,
-    unitPrice: 0,
-    buyerName: "",
-    notes: "",
-  });
+  const [formData, setFormData] = useState(emptyForm);
 
   const isOperator = session?.user?.role === "operator" || session?.user?.role === "admin";
 
   useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const fetchAll = () => {
     Promise.all([
       fetch("/api/sales").then(res => res.json()),
       fetch("/api/harvest").then(res => res.json())
@@ -69,29 +87,77 @@ export default function SalesPage() {
       setHarvests(harvestsData);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+  };
+
+  const fetchSales = () => {
+    fetch("/api/sales")
+      .then(res => res.json())
+      .then(data => setSales(data))
+      .catch(console.error);
+  };
+
+  const handleAdd = () => {
+    setEditingSale(null);
+    setFormData(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (sale: Sale) => {
+    setEditingSale(sale);
+    setFormData({
+      id: sale.id,
+      harvestId: sale.harvestId,
+      quantity: parseFloat(sale.quantity),
+      unitPrice: parseFloat(sale.unitPrice),
+      buyerName: sale.buyerName || "",
+      salesDate: sale.salesDate.split("T")[0],
+      notes: "",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/sales/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDeleteError(data.error || "Gagal menghapus data.");
+        return;
+      }
+      setDeleteConfirmId(null);
+      setDeleteError("");
+      fetchSales();
+    } catch (error) {
+      console.error(error);
+      setDeleteError("Gagal menghapus data. Silakan coba lagi.");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     try {
-      const res = await fetch("/api/sales", {
-        method: "POST",
+      const url = editingSale ? `/api/sales/${editingSale.id}` : "/api/sales";
+      const method = editingSale ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      
+
       if (res.ok) {
         setDialogOpen(false);
-        setFormData({ harvestId: "", quantity: 0, unitPrice: 0, buyerName: "", notes: "" });
-        const salesRes = await fetch("/api/sales");
-        setSales(await salesRes.json());
+        setEditingSale(null);
+        setFormData(emptyForm);
+        fetchSales();
       }
     } catch (error) {
       console.error(error);
     }
-    
+
     setSubmitting(false);
   };
 
@@ -117,15 +183,15 @@ export default function SalesPage() {
                 <DollarSign className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">Sales Management</h1>
-                <p className="text-sm text-gray-500">Track harvest sales and revenue</p>
+                <h1 className="text-xl font-bold text-gray-800">Data Penjualan</h1>
+                <p className="text-sm text-gray-500">Kelola data penjualan panen</p>
               </div>
             </div>
           </div>
           {isOperator && (
-            <Button onClick={() => setDialogOpen(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={handleAdd} className="bg-purple-600 hover:bg-purple-700">
               <Plus className="w-4 h-4 mr-2" />
-              Record Sale
+              Tambah Penjualan
             </Button>
           )}
         </div>
@@ -135,31 +201,31 @@ export default function SalesPage() {
         <div className="grid gap-6 mb-6 md:grid-cols-3">
           <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-100">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-100">Total Pendapatan</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">${totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-green-100 mt-1">All time earnings</p>
+              <p className="text-xs text-green-100 mt-1">Total pendapatan</p>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-100">Total Transactions</CardTitle>
+              <CardTitle className="text-sm font-medium text-blue-100">Total Transaksi</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{filteredSales.length}</div>
-              <p className="text-xs text-blue-100 mt-1">Sales records</p>
+              <p className="text-xs text-blue-100 mt-1">Jumlah penjualan</p>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-orange-100">Average Sale</CardTitle>
+              <CardTitle className="text-sm font-medium text-orange-100">Rata-rata Penjualan</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
                 ${filteredSales.length > 0 ? Math.round(totalRevenue / filteredSales.length).toLocaleString() : 0}
               </div>
-              <p className="text-xs text-orange-100 mt-1">Per transaction</p>
+              <p className="text-xs text-orange-100 mt-1">Per transaksi</p>
             </CardContent>
           </Card>
         </div>
@@ -170,7 +236,7 @@ export default function SalesPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search sales..."
+                  placeholder="Cari penjualan..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-gray-50 border-gray-200"
@@ -186,19 +252,20 @@ export default function SalesPage() {
             ) : filteredSales.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                 <Receipt className="w-12 h-12 mb-4 text-gray-300" />
-                <p>No sales records found</p>
+                <p>Tidak ada data penjualan</p>
               </div>
             ) : (
               <div className="rounded-md border border-gray-100">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quantity</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Unit Price</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Produk</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Jumlah</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Harga Satuan</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Total</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Buyer</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Date</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Pembeli</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Tanggal</th>
+                      {isOperator && <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Aksi</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -214,6 +281,28 @@ export default function SalesPage() {
                         </td>
                         <td className="px-4 py-3 text-gray-600">{sale.buyerName || "-"}</td>
                         <td className="px-4 py-3 text-gray-600">{new Date(sale.salesDate).toLocaleDateString()}</td>
+                        {isOperator && (
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="hover:bg-blue-100"
+                                onClick={() => handleEdit(sale)}
+                              >
+                                <Pencil className="w-4 h-4 text-blue-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="hover:bg-red-100"
+                                onClick={() => setDeleteConfirmId(sale.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -227,76 +316,114 @@ export default function SalesPage() {
       <FormModal
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title="Record New Sale"
+        title={editingSale ? "Edit Data Penjualan" : "Tambah Data Penjualan"}
         onSubmit={handleSubmit}
-        submitLabel={submitting ? "Saving..." : "Save Sale"}
+        submitLabel={submitting ? "Menyimpan..." : editingSale ? "Perbarui Data" : "Simpan Data"}
       >
         <div>
-          <Label htmlFor="harvest">Harvest</Label>
-          <Select
+          <Label htmlFor="harvest">Hasil Panen</Label>
+          <select
             value={formData.harvestId}
-            onValueChange={(value) => setFormData({ ...formData, harvestId: value })}
+            onChange={(e) => setFormData({ ...formData, harvestId: e.target.value })}
             required
+            style={selectStyle}
           >
-            <SelectTrigger style={{ marginTop: '4px' }}>
-              <SelectValue placeholder="Select harvest" />
-            </SelectTrigger>
-            <SelectContent>
-              {harvests.map(harvest => (
-                <SelectItem key={harvest.id} value={harvest.id}>
-                  {harvest.product.name} ({harvest.quantity})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">Pilih Hasil Panen</option>
+            {harvests.map(harvest => (
+              <option key={harvest.id} value={harvest.id}>
+                {harvest.product.name} ({harvest.quantity})
+              </option>
+            ))}
+          </select>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <Label htmlFor="quantity">Quantity (kg)</Label>
+            <Label htmlFor="quantity">Jumlah (kg)</Label>
             <Input
               id="quantity"
               type="number"
               min="1"
               value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, quantity: e.target.value === "" ? "" : parseFloat(e.target.value) })}
               required
               style={{ marginTop: '4px' }}
             />
           </div>
           <div>
-            <Label htmlFor="unitPrice">Unit Price ($)</Label>
+            <Label htmlFor="unitPrice">Harga Satuan ($)</Label>
             <Input
               id="unitPrice"
               type="number"
               min="0"
               step="0.01"
               value={formData.unitPrice}
-              onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value === "" ? "" : parseFloat(e.target.value) })}
               required
               style={{ marginTop: '4px' }}
             />
           </div>
         </div>
         <div>
-          <Label htmlFor="buyerName">Buyer Name (Optional)</Label>
+          <Label htmlFor="buyerName">Nama Pembeli (Opsional)</Label>
           <Input
             id="buyerName"
-            placeholder="Enter buyer name"
+            placeholder="Masukkan nama pembeli"
             value={formData.buyerName}
             onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })}
             style={{ marginTop: '4px' }}
           />
         </div>
         <div>
-          <Label htmlFor="notes">Notes (Optional)</Label>
+          <Label htmlFor="salesDate">Tanggal Penjualan</Label>
+          <Input
+            id="salesDate"
+            type="date"
+            value={formData.salesDate}
+            onChange={(e) => setFormData({ ...formData, salesDate: e.target.value })}
+            required
+            style={{ marginTop: '4px' }}
+          />
+        </div>
+        <div>
+          <Label htmlFor="notes">Catatan (Opsional)</Label>
           <Input
             id="notes"
-            placeholder="Add notes..."
+            placeholder="Tambah catatan..."
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             style={{ marginTop: '4px' }}
           />
         </div>
+      </FormModal>
+
+      <FormModal
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmId(null);
+            setDeleteError("");
+          }
+        }}
+        title="Hapus Data Penjualan"
+        onSubmit={(e) => { e.preventDefault(); handleDelete(deleteConfirmId!); }}
+        submitLabel="Ya, Hapus"
+      >
+        <p className="text-gray-600">
+          Apakah Anda yakin ingin menghapus data penjualan ini? Tindakan ini tidak dapat dibatalkan.
+        </p>
+        {deleteError && (
+          <div style={{
+            marginTop: '8px',
+            padding: '12px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '6px',
+            color: '#dc2626',
+            fontSize: '14px',
+          }}>
+            ⚠️ {deleteError}
+          </div>
+        )}
       </FormModal>
     </div>
   );

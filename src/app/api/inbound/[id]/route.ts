@@ -11,13 +11,12 @@ export async function PUT(
     const inbound = await prisma.seedlingInbound.update({
       where: { id: params.id },
       data: {
-      id: body.id,
-      productId: body.productId,
-      quantity: body.quantity,
-      unit: body.unit,
-      price: parseFloat(body.price),
-      inboundDate: body.inboundDate ? new Date(body.inboundDate + "T00:00:00.000Z") : undefined,
-      notes: body.notes || null,
+        productId: body.productId,
+        quantity: body.quantity,
+        unit: body.unit,
+        price: parseFloat(body.price),
+        inboundDate: body.inboundDate ? new Date(body.inboundDate + "T00:00:00.000Z") : undefined,
+        notes: body.notes || null,
       },
     });
     return NextResponse.json(inbound);

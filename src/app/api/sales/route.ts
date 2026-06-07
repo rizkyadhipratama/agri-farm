@@ -23,6 +23,7 @@ export async function POST(request: Request) {
         unitPrice: body.unitPrice,
         totalPrice: body.quantity * body.unitPrice,
         buyerName: body.buyerName,
+        salesDate: body.salesDate ? new Date(body.salesDate + "T00:00:00.000Z") : undefined,
         notes: body.notes,
       },
     });

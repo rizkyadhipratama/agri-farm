@@ -5,21 +5,16 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { FormModal } from "@/components/ui/modal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { 
   ArrowUpCircle, 
   Plus, 
   Search,
   ArrowLeft,
-  Loader2
+  Loader2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -39,6 +34,27 @@ interface Outbound {
   notes: string | null;
 }
 
+const selectStyle = {
+  marginTop: '4px',
+  width: '100%',
+  height: '40px',
+  borderRadius: '6px',
+  border: '1px solid #e2e8f0',
+  padding: '0 12px',
+  fontSize: '14px',
+  backgroundColor: 'white',
+  cursor: 'pointer',
+};
+
+const emptyForm = {
+  id: "",
+  productId: "",
+  quantity: "" as number | "",
+  unit: "",
+  outboundDate: "",
+  notes: "",
+};
+
 export default function OutboundPage() {
   const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,17 +62,19 @@ export default function OutboundPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingOutbound, setEditingOutbound] = useState<Outbound | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    productId: "",
-    quantity: 0,
-    unit: "",
-    notes: "",
-  });
+  const [formData, setFormData] = useState(emptyForm);
 
   const isOperator = session?.user?.role === "operator" || session?.user?.role === "admin";
 
   useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const fetchAll = () => {
     Promise.all([
       fetch("/api/outbound").then(res => res.json()),
       fetch("/api/products").then(res => res.json())
@@ -65,29 +83,76 @@ export default function OutboundPage() {
       setProducts(productsData);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+  };
+
+  const fetchOutbounds = () => {
+    fetch("/api/outbound")
+      .then(res => res.json())
+      .then(data => setOutbounds(data))
+      .catch(console.error);
+  };
+
+  const handleAdd = () => {
+    setEditingOutbound(null);
+    setFormData(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (outbound: Outbound) => {
+    setEditingOutbound(outbound);
+    setFormData({
+      id: outbound.id,
+      productId: outbound.productId,
+      quantity: outbound.quantity,
+      unit: outbound.unit,
+      outboundDate: outbound.outboundDate.split("T")[0],
+      notes: outbound.notes || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/outbound/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDeleteError(data.error || "Gagal menghapus data.");
+        return;
+      }
+      setDeleteConfirmId(null);
+      setDeleteError("");
+      fetchOutbounds();
+    } catch (error) {
+      console.error(error);
+      setDeleteError("Gagal menghapus data. Silakan coba lagi.");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     try {
-      const res = await fetch("/api/outbound", {
-        method: "POST",
+      const url = editingOutbound ? `/api/outbound/${editingOutbound.id}` : "/api/outbound";
+      const method = editingOutbound ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      
+
       if (res.ok) {
         setDialogOpen(false);
-        setFormData({ productId: "", quantity: 0, unit: "", notes: "" });
-        const outboundsRes = await fetch("/api/outbound");
-        setOutbounds(await outboundsRes.json());
+        setEditingOutbound(null);
+        setFormData(emptyForm);
+        fetchOutbounds();
       }
     } catch (error) {
       console.error(error);
     }
-    
+
     setSubmitting(false);
   };
 
@@ -110,15 +175,15 @@ export default function OutboundPage() {
                 <ArrowUpCircle className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">Seedling Outbound</h1>
-                <p className="text-sm text-gray-500">Manage seedling and supply outbound</p>
+                <h1 className="text-xl font-bold text-gray-800">Data Pengeluaran Bibit</h1>
+                <p className="text-sm text-gray-500">Kelola pengeluaran bibit dan suplai</p>
               </div>
             </div>
           </div>
           {isOperator && (
-            <Button onClick={() => setDialogOpen(true)} className="bg-orange-600 hover:bg-orange-700">
+            <Button onClick={handleAdd} className="bg-orange-600 hover:bg-orange-700">
               <Plus className="w-4 h-4 mr-2" />
-              New Outbound
+              Tambah Pengeluaran
             </Button>
           )}
         </div>
@@ -131,7 +196,7 @@ export default function OutboundPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search outbound..."
+                  placeholder="Cari pengeluaran..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-gray-50 border-gray-200"
@@ -147,17 +212,18 @@ export default function OutboundPage() {
             ) : filteredOutbounds.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                 <ArrowUpCircle className="w-12 h-12 mb-4 text-gray-300" />
-                <p>No outbound records found</p>
+                <p>Tidak ada data pengeluaran</p>
               </div>
             ) : (
               <div className="rounded-md border border-gray-100">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quantity</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Date</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Notes</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Produk</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Jumlah</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Tanggal</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Catatan</th>
+                      {isOperator && <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Aksi</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -171,6 +237,28 @@ export default function OutboundPage() {
                         </td>
                         <td className="px-4 py-3 text-gray-600">{new Date(outbound.outboundDate).toLocaleDateString()}</td>
                         <td className="px-4 py-3 text-gray-500 text-sm">{outbound.notes || "-"}</td>
+                        {isOperator && (
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="hover:bg-blue-100"
+                                onClick={() => handleEdit(outbound)}
+                              >
+                                <Pencil className="w-4 h-4 text-blue-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="hover:bg-red-100"
+                                onClick={() => setDeleteConfirmId(outbound.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -184,67 +272,102 @@ export default function OutboundPage() {
       <FormModal
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title="New Outbound Record"
+        title={editingOutbound ? "Edit Data Pengeluaran" : "Tambah Data Pengeluaran"}
         onSubmit={handleSubmit}
-        submitLabel={submitting ? "Saving..." : "Save Outbound"}
+        submitLabel={submitting ? "Menyimpan..." : editingOutbound ? "Perbarui Data" : "Simpan Data"}
       >
         <div>
-          <Label htmlFor="product">Product</Label>
-          <Select
+          <Label htmlFor="product">Produk</Label>
+          <select
             value={formData.productId}
-            onValueChange={(value) => setFormData({ ...formData, productId: value })}
+            onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
             required
+            style={selectStyle}
           >
-            <SelectTrigger style={{ marginTop: '4px' }}>
-              <SelectValue placeholder="Select product" />
-            </SelectTrigger>
-            <SelectContent>
-              {products.map(product => (
-                <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">Pilih Produk</option>
+            {products.map(product => (
+              <option key={product.id} value={product.id}>{product.name}</option>
+            ))}
+          </select>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <Label htmlFor="quantity">Quantity</Label>
+            <Label htmlFor="quantity">Jumlah</Label>
             <Input
               id="quantity"
               type="number"
               min="1"
               value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, quantity: e.target.value === "" ? "" : parseInt(e.target.value) })}
               style={{ marginTop: '4px' }}
             />
           </div>
           <div>
-            <Label htmlFor="unit">Unit</Label>
-            <Select
+            <Label htmlFor="unit">Satuan</Label>
+            <select
               value={formData.unit}
-              onValueChange={(value) => setFormData({ ...formData, unit: value })}
+              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
               required
+              style={selectStyle}
             >
-              <SelectTrigger style={{ marginTop: '4px' }}>
-                <SelectValue placeholder="Unit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kg">Kilogram</SelectItem>
-                <SelectItem value="pcs">Pieces</SelectItem>
-                <SelectItem value="liter">Liter</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="">Pilih Satuan</option>
+              <option value="kg">Kilogram</option>
+              <option value="pcs">Buah</option>
+              <option value="liter">Liter</option>
+            </select>
           </div>
         </div>
         <div>
-          <Label htmlFor="notes">Notes (Optional)</Label>
+          <Label htmlFor="outboundDate">Tanggal Pengeluaran</Label>
+          <Input
+            id="outboundDate"
+            type="date"
+            value={formData.outboundDate}
+            onChange={(e) => setFormData({ ...formData, outboundDate: e.target.value })}
+            required
+            style={{ marginTop: '4px' }}
+          />
+        </div>
+        <div>
+          <Label htmlFor="notes">Catatan (Opsional)</Label>
           <Input
             id="notes"
-            placeholder="Add notes..."
+            placeholder="Tambah catatan..."
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             style={{ marginTop: '4px' }}
           />
         </div>
+      </FormModal>
+
+      <FormModal
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmId(null);
+            setDeleteError("");
+          }
+        }}
+        title="Hapus Data Pengeluaran"
+        onSubmit={(e) => { e.preventDefault(); handleDelete(deleteConfirmId!); }}
+        submitLabel="Ya, Hapus"
+      >
+        <p className="text-gray-600">
+          Apakah Anda yakin ingin menghapus data pengeluaran ini? Tindakan ini tidak dapat dibatalkan.
+        </p>
+        {deleteError && (
+          <div style={{
+            marginTop: '8px',
+            padding: '12px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '6px',
+            color: '#dc2626',
+            fontSize: '14px',
+          }}>
+            ⚠️ {deleteError}
+          </div>
+        )}
       </FormModal>
     </div>
   );
