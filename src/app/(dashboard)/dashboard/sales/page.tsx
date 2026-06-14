@@ -255,8 +255,8 @@ export default function SalesPage() {
                 <p>Tidak ada data penjualan</p>
               </div>
             ) : (
-              <div className="rounded-md border border-gray-100">
-                <table className="w-full">
+              <div className="overflow-x-auto rounded-md border border-gray-100">
+                <table className="w-full min-w-[600px]">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Produk</th>

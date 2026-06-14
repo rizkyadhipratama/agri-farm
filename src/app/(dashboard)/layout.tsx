@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "@/components/providers";
+import SessionActivity from "@/components/session-activity";
 
 export const metadata: Metadata = {
   title: "Dashboard - AgriFarm",
@@ -11,5 +12,10 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <Providers>{children}</Providers>;
+  return (
+    <Providers>
+      <SessionActivity />
+      {children}
+    </Providers>
+  );
 }

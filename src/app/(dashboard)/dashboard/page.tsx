@@ -175,7 +175,7 @@ export default function DashboardPage() {
           <div className="w-10" />
         </header>
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 md:p-6">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
             <p className="text-gray-500">Welcome back, <span className="font-semibold text-green-600">{session?.user?.name}</span></p>

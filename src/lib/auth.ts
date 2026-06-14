@@ -62,14 +62,25 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
+        token.lastActivity = Date.now();
       }
+
+      if (trigger === "update") {
+        token.lastActivity = Date.now();
+      }
+
+      if (token.lastActivity && Date.now() - (token.lastActivity as number) > 7200000) {
+        return { ...token, exp: 0 };
+      }
+
       return token;
     },
     async session({ session, token }) {
+      if (!token.lastActivity) return null as any;
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.id as string;
@@ -82,6 +93,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 7200,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
