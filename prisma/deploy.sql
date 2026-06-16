@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS "Product" (
     "name" TEXT NOT NULL,
     "category" TEXT,
     "unit" TEXT,
+    "stock" INTEGER NOT NULL DEFAULT 0,
     "minStock" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
@@ -115,6 +116,17 @@ CREATE TABLE IF NOT EXISTS "FarmProduct" (
     CONSTRAINT "FarmProduct_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE IF NOT EXISTS "PlantingSeed" (
+    "id" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "unit" TEXT NOT NULL,
+    "plantingDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PlantingSeed_pkey" PRIMARY KEY ("id")
+);
+
 -- Create unique indexes
 CREATE UNIQUE INDEX IF NOT EXISTS "Role_name_key" ON "Role"("name");
 CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
@@ -126,6 +138,7 @@ ALTER TABLE "SeedlingInbound" ADD CONSTRAINT "SeedlingInbound_supplierId_fkey" F
 ALTER TABLE "SeedlingOutbound" ADD CONSTRAINT "SeedlingOutbound_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Harvest" ADD CONSTRAINT "Harvest_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Sales" ADD CONSTRAINT "Sales_harvestId_fkey" FOREIGN KEY ("harvestId") REFERENCES "Harvest"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PlantingSeed" ADD CONSTRAINT "PlantingSeed_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- ==========================================
 -- Seed Data
@@ -154,8 +167,8 @@ BEGIN
 END $$;
 
 -- Sample products
-INSERT INTO "Product" ("id", "name", "category", "unit", "minStock") VALUES
-  (gen_random_uuid()::text, 'Rice Seeds', 'Seeds', 'kg', 100),
-  (gen_random_uuid()::text, 'Tomato Seeds', 'Seeds', 'pcs', 50),
-  (gen_random_uuid()::text, 'Lettuce Seeds', 'Seeds', 'pcs', 50)
+INSERT INTO "Product" ("id", "name", "category", "unit", "stock", "minStock") VALUES
+  (gen_random_uuid()::text, 'Rice Seeds', 'Seeds', 'kg', 500, 100),
+  (gen_random_uuid()::text, 'Tomato Seeds', 'Seeds', 'pcs', 200, 50),
+  (gen_random_uuid()::text, 'Lettuce Seeds', 'Seeds', 'pcs', 200, 50)
 ON CONFLICT DO NOTHING;

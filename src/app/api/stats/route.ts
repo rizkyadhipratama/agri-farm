@@ -3,11 +3,12 @@ import { prisma } from "@/lib/db";
 
 export async function GET() {
   try {
-    const [products, inbounds, harvests, sales, salesRecords, harvestRecords, locationList] = await Promise.all([
+    const [products, inbounds, harvests, sales, plantings, salesRecords, harvestRecords, locationList] = await Promise.all([
       prisma.product.count(),
       prisma.seedlingInbound.count(),
       prisma.harvest.count(),
       prisma.sales.count(),
+      prisma.plantingSeed.count(),
       prisma.sales.findMany({ select: { totalPrice: true, salesDate: true } }),
       prisma.harvest.findMany({ select: { quantity: true, harvestDate: true } }),
       prisma.farmLocation.findMany({ select: { id: true, name: true, address: true } }),
@@ -43,6 +44,7 @@ export async function GET() {
       inbounds,
       harvests,
       sales,
+      plantings,
       totalRevenue,
       monthlySales,
       monthlyHarvests,

@@ -11,6 +11,7 @@ import {
   ArrowUpCircle,
   TrendingUp,
   MapPin,
+  Sprout,
 } from "lucide-react";
 
 interface MonthlyData {
@@ -30,6 +31,7 @@ interface Stats {
   inbounds: number;
   harvests: number;
   sales: number;
+  plantings: number;
   totalRevenue: number;
   monthlySales: MonthlyData[];
   monthlyHarvests: MonthlyData[];
@@ -43,6 +45,7 @@ export default function DashboardPage() {
     inbounds: 0,
     harvests: 0,
     sales: 0,
+    plantings: 0,
     totalRevenue: 0,
     monthlySales: [],
     monthlyHarvests: [],
@@ -125,6 +128,19 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        <div className="bg-white p-6 rounded-xl border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-lime-50">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Total Plantings</p>
+              <p className="text-3xl font-bold text-gray-800">
+                {loading ? "..." : stats.plantings}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-lime-100 rounded-xl flex items-center justify-center">
+              <Sprout className="w-6 h-6 text-lime-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -149,6 +165,15 @@ export default function DashboardPage() {
               >
                 <ArrowUpCircle className="w-5 h-5 mr-2 text-orange-500" />
                 New Outbound
+              </Button>
+            </Link>
+            <Link href="/dashboard/planting">
+              <Button
+                variant="outline"
+                className="w-full justify-start h-12 border-2 hover:border-lime-500 hover:bg-lime-50"
+              >
+                <Sprout className="w-5 h-5 mr-2 text-lime-500" />
+                New Planting
               </Button>
             </Link>
             <Link href="/dashboard/harvest">

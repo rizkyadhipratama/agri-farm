@@ -7,35 +7,34 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const old = await prisma.seedlingInbound.findUnique({ where: { id: params.id } });
+    const old = await prisma.plantingSeed.findUnique({ where: { id: params.id } });
     if (!old) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const [inbound] = await prisma.$transaction([
-      prisma.seedlingInbound.update({
+    const [planting] = await prisma.$transaction([
+      prisma.plantingSeed.update({
         where: { id: params.id },
         data: {
           productId: body.productId,
           quantity: body.quantity,
           unit: body.unit,
-          price: parseFloat(body.price),
-          inboundDate: body.inboundDate ? new Date(body.inboundDate + "T00:00:00.000Z") : undefined,
+          plantingDate: body.plantingDate ? new Date(body.plantingDate + "T00:00:00.000Z") : undefined,
           notes: body.notes || null,
         },
       }),
       prisma.product.update({
         where: { id: old.productId },
-        data: { stock: { decrement: old.quantity } },
+        data: { stock: { increment: old.quantity } },
       }),
       prisma.product.update({
         where: { id: body.productId },
-        data: { stock: { increment: body.quantity } },
+        data: { stock: { decrement: body.quantity } },
       }),
     ]);
-    return NextResponse.json(inbound);
+    return NextResponse.json(planting);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to update inbound" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update planting" }, { status: 500 });
   }
 }
 
@@ -44,22 +43,22 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const old = await prisma.seedlingInbound.findUnique({ where: { id: params.id } });
+    const old = await prisma.plantingSeed.findUnique({ where: { id: params.id } });
     if (!old) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     await prisma.$transaction([
-      prisma.seedlingInbound.delete({ where: { id: params.id } }),
+      prisma.plantingSeed.delete({ where: { id: params.id } }),
       prisma.product.update({
         where: { id: old.productId },
-        data: { stock: { decrement: old.quantity } },
+        data: { stock: { increment: old.quantity } },
       }),
     ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting inbound:", error);
-    return NextResponse.json({ error: "Gagal menghapus data pembelian" }, { status: 500 });
+    console.error("Error deleting planting:", error);
+    return NextResponse.json({ error: "Gagal menghapus data penanaman" }, { status: 500 });
   }
 }

@@ -7,12 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sprout, ArrowLeft, CheckCircle, Loader2, Mail } from "lucide-react";
+import { useTranslation, TranslationProvider } from "@/lib/i18n/context";
+import LanguageToggle from "@/components/language-toggle";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [step, setStep] = useState<"form" | "success">("form");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [devLink, setDevLink] = useState("");
+  const { t } = useTranslation();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -66,17 +69,15 @@ export default function RegisterPage() {
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <CardTitle className="text-2xl">Check Your Email</CardTitle>
-              <CardDescription>
-                We sent a verification link to your email. Click the link to activate your account.
-              </CardDescription>
+              <CardTitle className="text-2xl">{t("register.title")}</CardTitle>
+              <CardDescription>{t("register.subtitle")}</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg flex items-start gap-3">
               <Mail className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-blue-700">
-                Didn't receive the email? Check your spam folder or try registering again.
+                {t("register.subtitle")}
               </p>
             </div>
 
@@ -94,7 +95,7 @@ export default function RegisterPage() {
 
             <Link href="/login">
               <Button className="w-full bg-green-600 hover:bg-green-700">
-                Go to Login
+                {t("register.signIn")}
               </Button>
             </Link>
           </CardContent>
@@ -111,8 +112,11 @@ export default function RegisterPage() {
             <Sprout className="w-6 h-6 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Create Account</CardTitle>
-            <CardDescription>Join AgriFarm to manage your farm</CardDescription>
+            <div className="flex items-center justify-center gap-2">
+              <CardTitle className="text-2xl">{t("register.title")}</CardTitle>
+              <LanguageToggle />
+            </div>
+            <CardDescription>{t("register.subtitle")}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -121,26 +125,26 @@ export default function RegisterPage() {
               <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">{error}</div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" name="name" placeholder="Enter your name" required />
+              <Label htmlFor="name">{t("register.name")}</Label>
+              <Input id="name" name="name" placeholder={t("register.namePlaceholder")} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("register.email")}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t("register.emailPlaceholder")}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("register.password")}</Label>
               <Input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Min 6 characters"
+                placeholder={t("register.passwordPlaceholder")}
                 minLength={6}
                 required
               />
@@ -158,21 +162,29 @@ export default function RegisterPage() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Creating Account...</>
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> {t("register.registering")}</>
               ) : (
-                "Create Account"
+                t("register.register")
               )}
             </Button>
 
             <p className="text-center text-sm text-gray-500">
-              Already have an account?{" "}
+              {t("register.hasAccount")}{" "}
               <Link href="/login" className="text-green-600 font-medium hover:text-green-700">
-                Sign In
+                {t("register.signIn")}
               </Link>
             </p>
           </form>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <TranslationProvider>
+      <RegisterPageContent />
+    </TranslationProvider>
   );
 }

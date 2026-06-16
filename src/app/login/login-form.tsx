@@ -9,12 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Sprout, CheckCircle } from "lucide-react";
+import { useTranslation, TranslationProvider } from "@/lib/i18n/context";
+import LanguageToggle from "@/components/language-toggle";
 
-export default function LoginForm() {
+function LoginFormContent() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [verified, setVerified] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (searchParams.get("verified") === "true") {
@@ -54,8 +57,11 @@ export default function LoginForm() {
             <Sprout className="w-6 h-6 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl">AgriFarm</CardTitle>
-            <CardDescription>Sign in to your account</CardDescription>
+            <div className="flex items-center justify-center gap-2">
+              <CardTitle className="text-2xl">{t("login.title")}</CardTitle>
+              <LanguageToggle />
+            </div>
+            <CardDescription>{t("login.subtitle")}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -63,7 +69,7 @@ export default function LoginForm() {
             {verified && (
               <div className="p-3 text-sm text-green-700 bg-green-50 rounded-md flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
-                Email verified! You can now sign in.
+                {t("login.verified")}
               </div>
             )}
             {error && (
@@ -72,38 +78,46 @@ export default function LoginForm() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("login.email")}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Email"
+                placeholder={t("login.emailPlaceholder")}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("login.password")}</Label>
               <Input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t("login.passwordPlaceholder")}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t("login.signingIn") : t("login.signIn")}
             </Button>
 
             <p className="text-center text-sm text-gray-500">
-              Don't have an account?{" "}
+              {t("login.noAccount")}{" "}
               <Link href="/register" className="text-green-600 font-medium">
-                Create one
+                {t("login.createAccount")}
               </Link>
             </p>
           </form>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginForm() {
+  return (
+    <TranslationProvider>
+      <LoginFormContent />
+    </TranslationProvider>
   );
 }

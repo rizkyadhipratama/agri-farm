@@ -23,6 +23,7 @@ interface Product {
   name: string;
   category: string | null;
   unit: string | null;
+  stock: number;
   minStock: number;
 }
 
@@ -200,6 +201,7 @@ export default function ProductsPage() {
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Nama</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Kategori</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Satuan</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Stok</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Stok Minimum</th>
                       {isOperator && <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Aksi</th>}
                     </tr>
@@ -214,6 +216,11 @@ export default function ProductsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-gray-600">{product.unit || "-"}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${product.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {product.stock}
+                          </span>
+                        </td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${product.minStock > 10 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                             {product.minStock}

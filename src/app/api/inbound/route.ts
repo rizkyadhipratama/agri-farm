@@ -16,20 +16,24 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
-      // Convert date string to full ISO DateTime
     const inboundDate = new Date(body.inboundDate + "T00:00:00.000Z");
 
-    const inbound = await prisma.seedlingInbound.create({
-      data: {
-        productId: body.productId,
-        quantity: body.quantity,
-        unit: body.unit,
-        price: body.price,
-        inboundDate: inboundDate,
-        notes: body.notes || null,
-      },
-    });
+    const [inbound] = await prisma.$transaction([
+      prisma.seedlingInbound.create({
+        data: {
+          productId: body.productId,
+          quantity: body.quantity,
+          unit: body.unit,
+          price: body.price,
+          inboundDate: inboundDate,
+          notes: body.notes || null,
+        },
+      }),
+      prisma.product.update({
+        where: { id: body.productId },
+        data: { stock: { increment: body.quantity } },
+      }),
+    ]);
     return NextResponse.json(inbound);
   } catch (error) {
     console.error("Error creating inbound:", error);
