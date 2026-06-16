@@ -45,17 +45,11 @@ function Sidebar({
   return (
     <aside
       className={cn(
-        // Base: fixed on mobile, slides in/out
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl",
-        "transform transition-transform duration-300 ease-in-out",
-        // Mobile toggle
-        sidebarOpen ? "translate-x-0" : "-translate-x-full",
-        // ✅ md: always visible as static sidebar — matches header breakpoint
-        "md:relative md:translate-x-0 md:shadow-none md:z-auto"
+        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}
     >
       <div className="flex flex-col h-full">
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-green-600 to-emerald-600">
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
@@ -63,54 +57,47 @@ function Sidebar({
             </div>
             <span className="font-bold text-white">AgriFarm</span>
           </Link>
-          {/* ✅ Close button hidden on md+ */}
           <button
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden text-white hover:text-white/80 p-1 rounded"
-            aria-label="Close sidebar"
+            className="lg:hidden text-white"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const isActive =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? `${item.bg} ${item.color} shadow-sm`
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                )}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 p-4 space-y-1">
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                pathname === item.href
+                  ? `${item.bg} ${item.color} shadow-sm`
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.name}</span>
+            </Link>
+          ))}
         </nav>
 
-        {/* Footer */}
         <div className="p-4 border-t bg-gray-50">
           <div className="flex items-center space-x-3 mb-4 p-2 bg-white rounded-lg shadow-sm">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
               {session?.user?.name?.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{session?.user?.name}</p>
-              <p className="text-xs text-gray-500 capitalize">{session?.user?.role}</p>
+              <p className="text-sm font-medium truncate">
+                {session?.user?.name}
+              </p>
+              <p className="text-xs text-gray-500 capitalize">
+                {session?.user?.role}
+              </p>
             </div>
           </div>
-
           {session?.user?.role === "guest" && (
             <Button
               variant="outline"
@@ -127,7 +114,6 @@ function Sidebar({
               Upgrade to Operator
             </Button>
           )}
-
           <Button
             variant="outline"
             className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
@@ -172,39 +158,30 @@ export default function DashboardLayout({
     <>
       <SessionActivity />
       <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-green-50">
-
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-        {/* ✅ Backdrop — only on mobile, sits BELOW sidebar (z-40 < z-50) */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-          {/* ✅ Mobile topbar — hidden on md+ */}
-          <header className="bg-white/80 backdrop-blur-sm border-b px-4 py-3 md:hidden flex items-center justify-between shadow-sm sticky top-0 z-30">
+        <div className="flex-1 flex flex-col min-h-screen">
+          <header className="bg-white/80 backdrop-blur-sm border-b px-4 py-3 lg:hidden flex items-center justify-between shadow-sm">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Open sidebar"
+              className="p-2 hover:bg-gray-100 rounded-lg"
             >
-              <Menu className="w-6 h-6 text-gray-700" />
+              <Menu className="w-6 h-6" />
             </button>
             <span className="font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
               AgriFarm
             </span>
             <div className="w-10" />
           </header>
-
-          <main className="flex-1">
-            {children}
-          </main>
+          {children}
         </div>
 
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
       </div>
     </>
   );

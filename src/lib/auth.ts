@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
         token.lastActivity = Date.now();
       }
 
-      if (token.lastActivity && Date.now() - (token.lastActivity as number) > 7200000) {
+      if (token.lastActivity && Date.now() - (token.lastActivity as number) > 1800000) {
         return { ...token, exp: 0 };
       }
 

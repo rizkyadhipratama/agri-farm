@@ -85,7 +85,7 @@ export default function RegisterPage() {
                 <p className="text-sm font-medium text-amber-800 mb-2">Development Mode</p>
                 <a
                   href={devLink}
-                  className="text-sm text-blue-600 underline break-all hover:text-blue-800"
+                  className="text-sm text-blue-600 break-all hover:text-blue-800"
                 >
                   Click here to verify (dev only)
                 </a>
@@ -166,7 +166,7 @@ export default function RegisterPage() {
 
             <p className="text-center text-sm text-gray-500">
               Already have an account?{" "}
-              <Link href="/login" className="text-green-600 font-medium hover:underline">
+              <Link href="/login" className="text-green-600 font-medium hover:text-green-700">
                 Sign In
               </Link>
             </p>
