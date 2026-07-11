@@ -16,6 +16,8 @@ export const dictionary: Record<string, { id: string; en: string }> = {
   "nav.sales": { id: "Penjualan", en: "Sales" },
   "nav.locations": { id: "Lokasi", en: "Locations" },
   "nav.upgrade": { id: "Upgrade ke Operator", en: "Upgrade to Operator" },
+  "nav.upgradeSuccess": { id: "Upgrade Berhasil", en: "Upgrade Successful" },
+  "nav.upgradeMessage": { id: "Akun Anda telah diupgrade menjadi Operator. Silakan masuk kembali untuk menerapkan perubahan.", en: "Your account has been upgraded to Operator. Please sign in again to apply the changes." },
   "nav.signout": { id: "Keluar", en: "Sign Out" },
 
   // Dashboard

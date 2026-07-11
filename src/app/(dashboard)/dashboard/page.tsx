@@ -79,7 +79,7 @@ export default function DashboardPage() {
         <div className="bg-white p-6 rounded-xl border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-green-50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Products</p>
+              <p className="text-sm text-gray-500">Total Produk</p>
               <p className="text-3xl font-bold text-gray-800">
                 {loading ? "..." : stats.products}
               </p>
@@ -92,7 +92,7 @@ export default function DashboardPage() {
         <div className="bg-white p-6 rounded-xl border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-blue-50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Inbound</p>
+              <p className="text-sm text-gray-500">Total Pemasukan Bibit/Tanaman</p>
               <p className="text-3xl font-bold text-gray-800">
                 {loading ? "..." : stats.inbounds}
               </p>
@@ -105,7 +105,7 @@ export default function DashboardPage() {
         <div className="bg-white p-6 rounded-xl border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-emerald-50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Harvests</p>
+              <p className="text-sm text-gray-500">Total Panen</p>
               <p className="text-3xl font-bold text-gray-800">
                 {loading ? "..." : stats.harvests}
               </p>
@@ -118,9 +118,9 @@ export default function DashboardPage() {
         <div className="bg-white p-6 rounded-xl border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-purple-50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Revenue</p>
+              <p className="text-sm text-gray-500">Total Pendapatan</p>
               <p className="text-3xl font-bold text-gray-800">
-                ${loading ? "..." : stats.totalRevenue.toLocaleString()}
+                Rp{loading ? "..." : stats.totalRevenue.toLocaleString()}
               </p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         <div className="bg-white p-6 rounded-xl border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-lime-50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Plantings</p>
+              <p className="text-sm text-gray-500">Total Penanaman</p>
               <p className="text-3xl font-bold text-gray-800">
                 {loading ? "..." : stats.plantings}
               </p>
@@ -146,7 +146,7 @@ export default function DashboardPage() {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="bg-white p-6 rounded-xl border-0 shadow-lg">
           <h2 className="text-lg font-semibold mb-4 text-gray-800">
-            Quick Actions
+            Aksi Cepat
           </h2>
           <div className="grid grid-cols-2 gap-3">
             <Link href="/dashboard/inbound">
@@ -155,7 +155,7 @@ export default function DashboardPage() {
                 className="w-full justify-start h-12 border-2 hover:border-blue-500 hover:bg-blue-50"
               >
                 <ArrowDownCircle className="w-5 h-5 mr-2 text-blue-500" />
-                New Inbound
+                Pemasukan Bibit/Tanaman
               </Button>
             </Link>
             <Link href="/dashboard/outbound">
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                 className="w-full justify-start h-12 border-2 hover:border-orange-500 hover:bg-orange-50"
               >
                 <ArrowUpCircle className="w-5 h-5 mr-2 text-orange-500" />
-                New Outbound
+                Pengeluaran Bibit/Tanaman
               </Button>
             </Link>
             <Link href="/dashboard/planting">
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                 className="w-full justify-start h-12 border-2 hover:border-lime-500 hover:bg-lime-50"
               >
                 <Sprout className="w-5 h-5 mr-2 text-lime-500" />
-                New Planting
+                Penanaman Bibit/Tanaman
               </Button>
             </Link>
             <Link href="/dashboard/harvest">
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                 className="w-full justify-start h-12 border-2 hover:border-green-500 hover:bg-green-50"
               >
                 <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
-                Record Harvest
+                Panen
               </Button>
             </Link>
             <Link href="/dashboard/sales">
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                 className="w-full justify-start h-12 border-2 hover:border-purple-500 hover:bg-purple-50"
               >
                 <TrendingUp className="w-5 h-5 mr-2 text-purple-500" />
-                Record Sale
+                Penjualan Hasil Panen/Tanaman
               </Button>
             </Link>
           </div>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
               }))}
               gradientFrom="#22c55e"
               gradientTo="#10b981"
-              formatValue={(v) => `$${v.toLocaleString()}`}
+              formatValue={(v) => `Rp${v.toLocaleString()}`}
               height={220}
             />
           )}

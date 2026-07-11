@@ -150,7 +150,7 @@ export default function LocationsPage() {
             </div>
           </div>
           {isOperator && (
-            <Button onClick={handleAdd} className="bg-teal-600 hover:bg-teal-700">
+            <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
               Tambah Lokasi
             </Button>
@@ -159,27 +159,6 @@ export default function LocationsPage() {
       </header>
 
       <main className="p-6">
-        <div className="grid gap-6 mb-6 md:grid-cols-2">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-teal-100">Total Locations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{loading ? "..." : filteredLocations.length}</div>
-              <p className="text-xs text-teal-100 mt-1">Farm sites</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-amber-100">Total Area</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{loading ? "..." : `${totalArea} ha`}</div>
-              <p className="text-xs text-amber-100 mt-1">Hectares</p>
-            </CardContent>
-          </Card>
-        </div>
-
         <Card className="border-0 shadow-xl">
           <CardHeader className="pb-4 border-b">
             <div className="flex items-center gap-4">

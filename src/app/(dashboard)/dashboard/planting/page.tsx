@@ -191,7 +191,7 @@ export default function PlantingPage() {
             </div>
           </div>
           {isOperator && (
-            <Button onClick={handleAdd} className="bg-lime-600 hover:bg-lime-700">
+            <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
               Tambah Penanaman
             </Button>

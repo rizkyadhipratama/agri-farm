@@ -189,7 +189,7 @@ export default function SalesPage() {
             </div>
           </div>
           {isOperator && (
-            <Button onClick={handleAdd} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
               Tambah Penjualan
             </Button>
@@ -204,26 +204,26 @@ export default function SalesPage() {
               <CardTitle className="text-sm font-medium text-green-100">Total Pendapatan</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">${totalRevenue.toLocaleString()}</div>
+              <div className="text-3xl font-bold">Rp{totalRevenue.toLocaleString()}</div>
               <p className="text-xs text-green-100 mt-1">Total pendapatan</p>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-cyan-600 text-white">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-100">Total Transaksi</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-100">Total Transaksi</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{filteredSales.length}</div>
-              <p className="text-xs text-blue-100 mt-1">Jumlah penjualan</p>
+              <p className="text-xs text-green-100 mt-1">Jumlah penjualan</p>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-orange-100">Rata-rata Penjualan</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-100">Rata-rata Penjualan</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                ${filteredSales.length > 0 ? Math.round(totalRevenue / filteredSales.length).toLocaleString() : 0}
+                Rp{filteredSales.length > 0 ? Math.round(totalRevenue / filteredSales.length).toLocaleString() : 0}
               </div>
               <p className="text-xs text-orange-100 mt-1">Per transaksi</p>
             </CardContent>

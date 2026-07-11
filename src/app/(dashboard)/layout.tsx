@@ -59,6 +59,7 @@ function Sidebar({
   const pathname = usePathname();
   const { t } = useTranslation();
   const isDesktop = useIsDesktop();
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
 
   // Inline styles bypass Tailwind responsive issues entirely
   const asideStyle: React.CSSProperties = isDesktop
@@ -87,6 +88,7 @@ function Sidebar({
       };
 
   return (
+    <>
     <aside style={asideStyle} className="bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-green-600 to-emerald-600 flex-shrink-0">
@@ -157,7 +159,7 @@ function Sidebar({
               fetch("/api/auth/upgrade", { method: "POST" })
                 .then((res) => res.json())
                 .then((data) => {
-                  if (data.message) window.location.reload();
+                  if (data.message) setUpgradeSuccess(true);
                 });
             }}
           >
@@ -176,6 +178,40 @@ function Sidebar({
         </Button>
       </div>
     </aside>
+      {upgradeSuccess && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 100,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              width: "100%",
+              maxWidth: "500px",
+              padding: "24px",
+            }}
+          >
+            <h2 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "16px" }}>
+              {t("nav.upgradeSuccess")}
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">{t("nav.upgradeMessage")}</p>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <Button onClick={() => signOut({ callbackUrl: "/" })}>
+                {t("nav.signout")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
