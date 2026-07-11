@@ -52,7 +52,7 @@ function Sidebar({
         "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl",
         "transform transition-transform duration-300 ease-in-out",
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
-        "md:relative md:translate-x-0 md:shadow-none md:z-auto"
+        "md:relative md:transform-none md:shadow-none md:z-auto"
       )}
     >
       <div className="flex flex-col h-full">
@@ -184,7 +184,7 @@ function DashboardLayoutInner({
         <div className="flex-1 flex flex-col min-w-0 min-h-screen">
           <header className="bg-white/80 backdrop-blur-sm border-b px-4 py-3 md:hidden flex items-center justify-between shadow-sm sticky top-0 z-30">
             <button
-              onClick={() => { console.log("Opening sidebar"); setSidebarOpen(true); }}
+              onClick={() => setSidebarOpen(true)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Open sidebar"
             >

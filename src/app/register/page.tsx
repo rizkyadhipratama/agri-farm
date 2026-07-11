@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sprout, ArrowLeft, CheckCircle, Loader2, Mail } from "lucide-react";
+import { Sprout, CheckCircle, Loader2 } from "lucide-react";
 import { useTranslation, TranslationProvider } from "@/lib/i18n/context";
 import LanguageToggle from "@/components/language-toggle";
 
@@ -14,7 +14,7 @@ function RegisterPageContent() {
   const [step, setStep] = useState<"form" | "success">("form");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [devLink, setDevLink] = useState("");
+
   const { t } = useTranslation();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -49,9 +49,6 @@ function RegisterPageContent() {
         return;
       }
 
-      if (data.devVerifyUrl) {
-        setDevLink(data.devVerifyUrl);
-      }
       setStep("success");
     } catch {
       setError("Connection error. Please try again.");
@@ -74,24 +71,9 @@ function RegisterPageContent() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg flex items-start gap-3">
-              <Mail className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-blue-700">
-                {t("register.subtitle")}
-              </p>
-            </div>
-
-            {devLink && (
-              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                <p className="text-sm font-medium text-amber-800 mb-2">Development Mode</p>
-                <a
-                  href={devLink}
-                  className="text-sm text-blue-600 break-all hover:text-blue-800"
-                >
-                  Click here to verify (dev only)
-                </a>
-              </div>
-            )}
+            <p className="text-sm text-gray-600 text-center">
+              Akun Anda sudah aktif. Silakan masuk untuk memulai.
+            </p>
 
             <Link href="/login">
               <Button className="w-full bg-green-600 hover:bg-green-700">

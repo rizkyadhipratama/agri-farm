@@ -7,7 +7,7 @@ export async function sendVerificationEmail(email: string, token: string): Promi
   const baseUrl = getBaseUrl();
   const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
 
-  if (process.env.RESEND_API_KEY) {
+  if (process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.startsWith("re_xxxx")) {
     const from = process.env.EMAIL_FROM || "AgriFarm <onboarding@resend.dev>";
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

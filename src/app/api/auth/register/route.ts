@@ -34,14 +34,13 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomUUID();
 
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
         roleId: guestRole.id,
-        verificationToken,
-        verificationTokenExp: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        emailVerified: new Date(),
       },
     });
 
@@ -52,9 +51,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      message: "Registration successful. Check your email for verification link.",
-      // In development, return the token for easy testing
-      ...(process.env.NODE_ENV !== "production" && { devVerifyUrl: `/api/auth/verify?token=${verificationToken}` }),
+      message: "Registration successful.",
+      user: { id: user.id, name: user.name, email: user.email },
     });
   } catch (error) {
     console.error("Registration error:", error);

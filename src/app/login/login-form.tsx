@@ -43,7 +43,7 @@ function LoginFormContent() {
     setLoading(false);
 
     if (result?.error) {
-      setError(result.error);
+      setError(t("login.error"));
     } else {
       window.location.href = "/dashboard";
     }
