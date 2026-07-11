@@ -35,6 +35,19 @@ const navItems = [
   { key: "nav.locations", href: "/dashboard/locations", icon: MapPin, color: "text-teal-600", bg: "bg-teal-100" },
 ];
 
+// Hook: true = desktop (≥768px), false = mobile
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isDesktop;
+}
+
 function Sidebar({
   sidebarOpen,
   setSidebarOpen,
@@ -45,98 +58,122 @@ function Sidebar({
   const { data: session } = useSession();
   const pathname = usePathname();
   const { t } = useTranslation();
+  const isDesktop = useIsDesktop();
+
+  // Inline styles bypass Tailwind responsive issues entirely
+  const asideStyle: React.CSSProperties = isDesktop
+    ? {
+        // Desktop: in normal document flow, never overlaps content
+        position: "sticky",
+        top: 0,
+        height: "100vh",
+        width: "256px",
+        flexShrink: 0,
+        transform: "none",
+        zIndex: "auto",
+        boxShadow: "none",
+      }
+    : {
+        // Mobile: fixed overlay, slides in/out
+        position: "fixed",
+        top: 0,
+        left: 0,
+        bottom: 0,
+        width: "256px",
+        zIndex: 50,
+        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 300ms ease-in-out",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+      };
 
   return (
-    <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl",
-        "transform transition-transform duration-300 ease-in-out",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full",
-        "md:relative md:transform-none md:shadow-none md:z-auto"
-      )}
-    >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-green-600 to-emerald-600">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
-              <Sprout className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-white">AgriFarm</span>
-          </Link>
+    <aside style={asideStyle} className="bg-white flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-green-600 to-emerald-600 flex-shrink-0">
+        <Link href="/" className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
+            <Sprout className="w-5 h-5 text-white" />
+          </div>
+          <span className="font-bold text-white">AgriFarm</span>
+        </Link>
+        {/* Close button — mobile only */}
+        {!isDesktop && (
           <button
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden text-white hover:text-white/80 p-1 rounded"
+            className="text-white hover:text-white/80 p-1 rounded"
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5" />
           </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        {navItems.map((item) => {
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                isActive
+                  ? `${item.bg} ${item.color} shadow-sm`
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              <span>{t(item.key)}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t bg-gray-50 flex-shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm flex-1 min-w-0 mr-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+              {session?.user?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{session?.user?.name}</p>
+              <p className="text-xs text-gray-500 capitalize">{session?.user?.role}</p>
+            </div>
+          </div>
+          <LanguageToggle />
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const isActive =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? `${item.bg} ${item.color} shadow-sm`
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                )}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                <span>{t(item.key)}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 border-t bg-gray-50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3 p-2 bg-white rounded-lg shadow-sm flex-1 min-w-0 mr-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                {session?.user?.name?.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{session?.user?.name}</p>
-                <p className="text-xs text-gray-500 capitalize">{session?.user?.role}</p>
-              </div>
-            </div>
-            <LanguageToggle />
-          </div>
-
-          {session?.user?.role === "guest" && (
-            <Button
-              variant="outline"
-              className="w-full justify-start text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200 mb-2"
-              onClick={() => {
-                fetch("/api/auth/upgrade", { method: "POST" })
-                  .then((res) => res.json())
-                  .then((data) => {
-                    if (data.message) window.location.reload();
-                  });
-              }}
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              {t("nav.upgrade")}
-            </Button>
-          )}
-
+        {session?.user?.role === "guest" && (
           <Button
             variant="outline"
-            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-            onClick={() => signOut({ callbackUrl: "/" })}
+            className="w-full justify-start text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200 mb-2"
+            onClick={() => {
+              fetch("/api/auth/upgrade", { method: "POST" })
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data.message) window.location.reload();
+                });
+            }}
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            {t("nav.signout")}
+            <Shield className="w-4 h-4 mr-2" />
+            {t("nav.upgrade")}
           </Button>
-        </div>
+        )}
+
+        <Button
+          variant="outline"
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          {t("nav.signout")}
+        </Button>
       </div>
     </aside>
   );
@@ -150,12 +187,18 @@ function DashboardLayoutInner({
   const { status } = useSession();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
+
+  // Close sidebar when switching to desktop
+  useEffect(() => {
+    if (isDesktop) setSidebarOpen(false);
+  }, [isDesktop]);
 
   if (status === "loading" || status === "unauthenticated") {
     return (
@@ -171,35 +214,46 @@ function DashboardLayoutInner({
   return (
     <>
       <SessionActivity />
-      <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-green-50">
-        {sidebarOpen && (
+      <div style={{ display: "flex", minHeight: "100vh" }} className="bg-gradient-to-br from-gray-50 to-green-50">
+
+        {/* Mobile backdrop */}
+        {sidebarOpen && !isDesktop && (
           <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }}
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
         )}
+
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-        <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-          <header className="bg-white/80 backdrop-blur-sm border-b px-4 py-3 md:hidden flex items-center justify-between shadow-sm sticky top-0 z-30">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Open sidebar"
+        {/* Main content */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          {/* Mobile topbar */}
+          {!isDesktop && (
+            <header
+              style={{ position: "sticky", top: 0, zIndex: 30 }}
+              className="bg-white/80 backdrop-blur-sm border-b px-4 py-3 flex items-center justify-between shadow-sm"
             >
-              <Menu className="w-6 h-6 text-gray-700" />
-            </button>
-            <span className="font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              AgriFarm
-            </span>
-            <div className="w-10" />
-          </header>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Open sidebar"
+              >
+                <Menu className="w-6 h-6 text-gray-700" />
+              </button>
+              <span className="font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                AgriFarm
+              </span>
+              <div className="w-10" />
+            </header>
+          )}
 
-          <main className="flex-1">
+          <main style={{ flex: 1 }}>
             {children}
           </main>
         </div>
+
       </div>
     </>
   );
