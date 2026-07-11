@@ -73,14 +73,10 @@ export const authOptions: NextAuthOptions = {
         token.lastActivity = Date.now();
       }
 
-      if (token.lastActivity && Date.now() - (token.lastActivity as number) > 1800000) {
-        return { ...token, exp: 0 };
-      }
-
       return token;
     },
     async session({ session, token }) {
-      if (!token.lastActivity) return null as any;
+      if (!token.lastActivity) return session;
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.id as string;

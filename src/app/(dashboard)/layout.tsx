@@ -172,8 +172,6 @@ function DashboardLayoutInner({
     <>
       <SessionActivity />
       <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-green-50">
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -181,11 +179,12 @@ function DashboardLayoutInner({
             aria-hidden="true"
           />
         )}
+        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <div className="flex-1 flex flex-col min-w-0 min-h-screen">
           <header className="bg-white/80 backdrop-blur-sm border-b px-4 py-3 md:hidden flex items-center justify-between shadow-sm sticky top-0 z-30">
             <button
-              onClick={() => setSidebarOpen(true)}
+              onClick={() => { console.log("Opening sidebar"); setSidebarOpen(true); }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Open sidebar"
             >
