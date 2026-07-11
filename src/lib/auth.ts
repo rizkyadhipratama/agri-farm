@@ -12,52 +12,56 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("=== AUTH ATTEMPT ===");
-        console.log("Email:", credentials?.email);
+        try {
+          console.log("=== AUTH ATTEMPT ===");
+          console.log("Email:", credentials?.email);
 
-        if (!credentials?.email || !credentials?.password) {
-          console.log("Missing credentials");
+          if (!credentials?.email || !credentials?.password) {
+            console.log("Missing credentials");
+            return null;
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            include: { role: true },
+          });
+
+          console.log("User found:", !!user);
+
+          if (!user) {
+            console.log("User not found");
+            return null;
+          }
+
+          const emailVerified = (user as any).emailVerified;
+          if (typeof emailVerified !== "undefined" && !emailVerified) {
+            console.log("Email not verified");
+            return null;
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.passwordHash
+          );
+
+          console.log("Password valid:", isPasswordValid);
+
+          if (!isPasswordValid) {
+            console.log("Invalid password");
+            return null;
+          }
+
+          console.log("Auth SUCCESS");
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role?.name || "viewer",
+          };
+        } catch (error) {
+          console.error("Authorize error:", error);
           return null;
         }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          include: { role: true },
-        });
-
-        console.log("User found:", !!user);
-        console.log("User data:", user ? { id: user.id, email: user.email, role: user.role?.name } : null);
-
-        if (!user) {
-          console.log("User not found");
-          return null;
-        }
-
-        const emailVerified = (user as any).emailVerified;
-        if (typeof emailVerified !== "undefined" && !emailVerified) {
-          console.log("Email not verified");
-          throw new Error("Please verify your email before signing in");
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
-
-        console.log("Password valid:", isPasswordValid);
-
-        if (!isPasswordValid) {
-          console.log("Invalid password");
-          return null;
-        }
-
-        console.log("Auth SUCCESS");
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role?.name || "viewer",
-        };
       },
     }),
   ],
