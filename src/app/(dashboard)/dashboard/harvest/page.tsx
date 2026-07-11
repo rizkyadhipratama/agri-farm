@@ -50,6 +50,8 @@ const emptyForm = { productId: "", quantity: "" as number | "", unit: "", qualit
 export default function HarvestPage() {
   const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterYear, setFilterYear] = useState("");
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,9 +146,13 @@ export default function HarvestPage() {
     }
   };
 
-  const filteredHarvests = harvests.filter(h => 
-    h.product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredHarvests = harvests.filter(h => {
+    const matchSearch = h.product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const date = new Date(h.harvestDate);
+    const matchMonth = !filterMonth || (date.getMonth() + 1).toString() === filterMonth;
+    const matchYear = !filterYear || date.getFullYear().toString() === filterYear;
+    return matchSearch && matchMonth && matchYear;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
@@ -190,6 +196,35 @@ export default function HarvestPage() {
                   className="pl-10 bg-gray-50 border-gray-200"
                 />
               </div>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                style={{ ...selectStyle, width: "140px", marginTop: 0 }}
+              >
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7">Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                style={{ ...selectStyle, width: "110px", marginTop: 0 }}
+              >
+                <option value="">Semua Tahun</option>
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
           </CardHeader>
           <CardContent className="p-0">

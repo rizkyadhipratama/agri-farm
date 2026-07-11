@@ -63,6 +63,8 @@ const emptyForm = {
 export default function InboundPage() {
   const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterYear, setFilterYear] = useState("");
   const [inbounds, setInbounds] = useState<Inbound[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,10 +164,14 @@ export default function InboundPage() {
     setSubmitting(false);
   };
 
-  const filteredInbounds = inbounds.filter(i =>
-    i.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (i.supplier?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-  );
+  const filteredInbounds = inbounds.filter(i => {
+    const matchSearch = i.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (i.supplier?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+    const date = new Date(i.inboundDate);
+    const matchMonth = !filterMonth || (date.getMonth() + 1).toString() === filterMonth;
+    const matchYear = !filterYear || date.getFullYear().toString() === filterYear;
+    return matchSearch && matchMonth && matchYear;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
@@ -209,6 +215,35 @@ export default function InboundPage() {
                   className="pl-10 bg-gray-50 border-gray-200"
                 />
               </div>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                style={{ ...selectStyle, width: "140px", marginTop: 0 }}
+              >
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7">Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                style={{ ...selectStyle, width: "110px", marginTop: 0 }}
+              >
+                <option value="">Semua Tahun</option>
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
           </CardHeader>
           <CardContent className="p-0">

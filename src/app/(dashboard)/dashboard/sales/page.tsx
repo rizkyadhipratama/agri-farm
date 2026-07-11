@@ -62,6 +62,8 @@ const emptyForm = {
 export default function SalesPage() {
   const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterYear, setFilterYear] = useState("");
   const [sales, setSales] = useState<Sale[]>([]);
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,10 +163,14 @@ export default function SalesPage() {
     setSubmitting(false);
   };
 
-  const filteredSales = sales.filter(s => 
-    s.harvest.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (s.buyerName?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-  );
+  const filteredSales = sales.filter(s => {
+    const matchSearch = s.harvest.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.buyerName?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+    const date = new Date(s.salesDate);
+    const matchMonth = !filterMonth || (date.getMonth() + 1).toString() === filterMonth;
+    const matchYear = !filterYear || date.getFullYear().toString() === filterYear;
+    return matchSearch && matchMonth && matchYear;
+  });
 
   const totalRevenue = filteredSales.reduce((sum, s) => sum + Number(s.totalPrice), 0);
 
@@ -242,6 +248,35 @@ export default function SalesPage() {
                   className="pl-10 bg-gray-50 border-gray-200"
                 />
               </div>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                style={{ ...selectStyle, width: "140px", marginTop: 0 }}
+              >
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7">Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                style={{ ...selectStyle, width: "110px", marginTop: 0 }}
+              >
+                <option value="">Semua Tahun</option>
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -273,10 +308,10 @@ export default function SalesPage() {
                       <tr key={sale.id} className={`border-t ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-purple-50 transition-colors`}>
                         <td className="px-4 py-3 font-medium">{sale.harvest.product.name}</td>
                         <td className="px-4 py-3 text-gray-600">{sale.quantity} kg</td>
-                        <td className="px-4 py-3 text-gray-600">${sale.unitPrice}</td>
+                        <td className="px-4 py-3 text-gray-600">Rp{sale.unitPrice}</td>
                         <td className="px-4 py-3">
                           <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            ${sale.totalPrice}
+                            Rp{sale.totalPrice}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-gray-600">{sale.buyerName || "-"}</td>
@@ -350,7 +385,7 @@ export default function SalesPage() {
             />
           </div>
           <div>
-            <Label htmlFor="unitPrice">Harga Satuan ($)</Label>
+            <Label htmlFor="unitPrice">Harga Satuan (Rp)</Label>
             <Input
               id="unitPrice"
               type="number"

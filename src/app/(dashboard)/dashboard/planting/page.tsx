@@ -68,6 +68,8 @@ export default function PlantingPage() {
   const [deleteError, setDeleteError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterYear, setFilterYear] = useState("");
 
   const isOperator =
     session?.user?.role === "operator" || session?.user?.role === "admin";
@@ -211,8 +213,39 @@ export default function PlantingPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-gray-50 border-gray-200"
                 />
+
               </div>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                style={{ ...selectStyle, width: "140px", marginTop: 0 }}
+              >
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7">Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                style={{ ...selectStyle, width: "110px", marginTop: 0 }}
+              >
+                <option value="">Semua Tahun</option>
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
+
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
